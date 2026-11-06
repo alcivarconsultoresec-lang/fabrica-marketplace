@@ -1,0 +1,32 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fábrica Agéntica · Marketplace</title><link rel="stylesheet" href="assets/style.css"></head><body>
+<header><strong>Fábrica Agéntica</strong> · Marketplace de productos especializados
+<nav><a href="https://github.com/alcivarconsultoresec-lang/fabrica-marketplace">Comprar / pedir</a><a href="README.md">Documentación</a></nav></header>
+<main><section class="hero"><p class="eyebrow">200 productos · 20 sectores · 10 sistemas</p>
+<h1>Capacidades que resuelven dinero, riesgo y cumplimiento.</h1>
+<p>Catálogo operativo con estados transparentes. Las solicitudes se abren como issue; no hay pago automático ni se simulan ventas.</p>
+<div class="stats"><span><b>10</b> disponibles</span><span><b>190</b> preventa</span><span><b>200</b> productos</span></div></section>
+<section class="filters"><input id="q" placeholder="Buscar producto, problema o comprador…">
+<select id="sector"><option value="">Todos los sectores</option><option>AGENTES, CRIPTO Y MCP</option><option>AGROINDUSTRIA</option><option>BANCA</option><option>COMERCIO EXTERIOR</option><option>CONSTRUCCIÓN E INFRAESTRUCTURA</option><option>EDUCACIÓN Y FORMACIÓN</option><option>ENERGÍA Y UTILITIES</option><option>FARMACÉUTICA Y BIOTECH</option><option>FINTECH Y PAGOS</option><option>INMOBILIARIO</option><option>LEGAL Y COMPLIANCE</option><option>LOGÍSTICA Y TRANSPORTE</option><option>MANUFACTURA</option><option>MINERÍA</option><option>RETAIL Y E-COMMERCE</option><option>RRHH Y TALENTO</option><option>SALUD</option><option>SECTOR PÚBLICO Y LICITACIONES</option><option>SEGUROS</option><option>TURISMO Y HOSPITALIDAD</option></select>
+<select id="status"><option value="">Todos</option><option value="available">Disponible</option><option value="preorder">Preventa</option></select>
+<span id="count"></span></section><section id="grid" class="grid"></section></main>
+<div id="modal" class="modal"><div class="modal-body"><button id="close">×</button><div id="detail"></div>
+<form id="order"><h2>Solicitar cotización</h2><input name="name" placeholder="Nombre" required>
+<input name="email" type="email" placeholder="Email" required><input name="company" placeholder="Empresa">
+<textarea name="notes" placeholder="Necesidad y plazo"></textarea><button type="submit">Abrir solicitud</button>
+<p class="note">Se abrirá un issue en GitHub. No es una compra ni un pago.</p></form></div></div>
+<script>
+let catalog=[],current=null;const $=s=>document.querySelector(s);
+const REPO="https://github.com/alcivarconsultoresec-lang/fabrica-marketplace";
+async function load(){catalog=await (await fetch('data/catalog.json')).json();
+$('#count').textContent=catalog.length+' productos';render();}
+function render(){const q=$('#q').value.toLowerCase(),sec=$('#sector').value,st=$('#status').value;
+const rows=catalog.filter(p=>(!q||(p.name+' '+p.problem+' '+p.buyer).toLowerCase().includes(q))&&(!sec||p.sector===sec)&&(!st||p.status===st));
+$('#count').textContent=`${rows.length} de ${catalog.length}`;$('#grid').innerHTML=rows.map(p=>`<article class="card"><p class="eyebrow">${p.sector} · ${p.status_label}</p><h2>${p.name}</h2><p>${p.problem}</p><p class="buyer">Compra: ${p.buyer}</p><p class="price">US$${p.price_usd} · ${p.pricing_model}</p><button onclick="openP('${p.id}')">Ver ficha</button></article>`).join('');}
+window.openP=id=>{current=catalog.find(p=>p.id===id);$('#detail').innerHTML=`<p class="eyebrow">${current.sector} · ${current.status_label}</p><h2>${current.name}</h2><p>${current.problem}</p><table><tr><th>Comprador</th><td>${current.buyer}</td></tr><tr><th>Precio</th><td>US$${current.price_usd} · ${current.price_text}</td></tr><tr><th>Entrega</th><td>${current.delivery}</td></tr><tr><th>Alcance</th><td>${current.scope}</td></tr><tr><th>Límites</th><td>${current.limitations}</td></tr><tr><th>Evidencia</th><td>${current.evidence}</td></tr><tr><th>Ficha</th><td><a href="products/${current.slug}.html">HTML</a></td></tr></table>`;$('#modal').classList.add('open');};
+$('#close').onclick=()=>$('#modal').classList.remove('open');$('#q').oninput=render;$('#sector').onchange=render;$('#status').onchange=render;
+$('#order').onsubmit=e=>{e.preventDefault();if(!current)return;const f=new FormData(e.target);
+const title='[Pedido] '+current.name;const body='Producto: '+current.id+' — '+current.name+'\nPrecio publicado: US$'+current.price_usd+'\nComprador: '+f.get('name')+' <'+f.get('email')+'>\nEmpresa: '+f.get('company')+'\nNecesidad: '+f.get('notes')+'\n\nSolicitud de cotización, no compra.';
+window.open(REPO+'/issues/new?title='+encodeURIComponent(title)+'&body='+encodeURIComponent(body),'_blank');};
+load();
+</script></body></html>
